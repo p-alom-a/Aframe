@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>Cube en AR sans marqueur</title>
-     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-ar@1.7.0/dist/aframe-ar.js"></script>
   </head>
   <body style="margin: 0; overflow: hidden;">
@@ -27,5 +27,21 @@
       <!-- Caméra AR -->
       <a-entity camera></a-entity>
     </a-scene>
+
+    <!-- Bouton pour activer AR -->
+    <button style="position: absolute; top: 10px; left: 10px; z-index: 1000;" onclick="enterAR()">
+      Activer AR
+    </button>
+
+    <script>
+      function enterAR() {
+        const scene = document.querySelector('a-scene');
+        if (scene.hasLoaded) {
+          scene.enterVR();
+        } else {
+          scene.addEventListener('loaded', () => scene.enterVR());
+        }
+      }
+    </script>
   </body>
 </html>
