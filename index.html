@@ -1,49 +1,84 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Cube en AR sans marqueur</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-ar@1.7.0/dist/aframe-ar.js"></script>
-  </head>
-  <body style="margin: 0; overflow: hidden;">
-    <a-scene
-      vr-mode-ui="enabled: false"
-      arjs="sourceType: webcam; debugUIEnabled: false;"
-      embedded
-      renderer="logarithmicDepthBuffer: true;"
-      xr-mode-ui="enabled: false"
-    >
-      <!-- Cube en 3D -->
-      <a-entity
-        id="cube"
-        geometry="primitive: box"
-        material="color: #4CC3D9"
-        position="0 0 -2"
-        scale="0.5 0.5 0.5"
-        ar-hit-test="target: #cube"
-      ></a-entity>
+<head>
+    <title>Cube AR Sans Marqueur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ar.js/2.2.2/aframe-ar.js"></script>
+    <style>
+        .ar-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .ar-button {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body style="margin: 0;">
+    <div class="ar-controls">
+        <button class="ar-button" onclick="rotateBox()">Tourner</button>
+        <button class="ar-button" onclick="moveCloser()">Rapprocher</button>
+        <button class="ar-button" onclick="moveFurther()">Éloigner</button>
+    </div>
 
-      <!-- Caméra AR -->
-      <a-entity camera></a-entity>
+    <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
+        <a-camera gps-camera rotation-reader></a-camera>
+        
+        <a-box id="ar-cube"
+            position="0 2 -5"
+            rotation="0 0 0"
+            scale="1 1 1"
+            material="color: #4CC3D9"
+            animation="property: rotation; to: 0 360 0; dur: 2000; easing: linear; loop: false; enabled: false">
+        </a-box>
     </a-scene>
 
-    <!-- Bouton pour activer AR -->
-    <button style="position: absolute; top: 10px; left: 10px; z-index: 1000;" onclick="enterAR()">
-      Activer AR
-    </button>
-
     <script>
-      <script>
-  function enterAR() {
-    const scene = document.querySelector('a-scene');
-    if (scene.hasLoaded) {
-      scene.enterAR();
-    } else {
-      scene.addEventListener('loaded', () => scene.enterAR());
-    }
-  }
-</script
+        let distance = -5;
+        
+        function rotateBox() {
+            const cube = document.querySelector('#ar-cube');
+            cube.setAttribute('animation', 'enabled', true);
+            setTimeout(() => {
+                cube.setAttribute('animation', 'enabled', false);
+            }, 2000);
+        }
+
+        function moveCloser() {
+            distance += 1;
+            if (distance > -2) distance = -2;  // Limite minimale
+            updatePosition();
+        }
+
+        function moveFurther() {
+            distance -= 1;
+            if (distance < -10) distance = -10;  // Limite maximale
+            updatePosition();
+        }
+
+        function updatePosition() {
+            const cube = document.querySelector('#ar-cube');
+            cube.setAttribute('position', `0 2 ${distance}`);
+        }
+
+        // Attendre que la scène soit chargée
+        window.addEventListener('load', () => {
+            const scene = document.querySelector('a-scene');
+            scene.addEventListener('loaded', () => {
+                updatePosition();
+            });
+        });
     </script>
-  </body>
+</body>
 </html>
