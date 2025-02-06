@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cube AR Sans Marqueur</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ar.js/2.2.2/aframe-ar.js"></script>
+    <title>Cube AR avec Three.js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        .ar-controls {
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        .controls {
             position: fixed;
             bottom: 20px;
             left: 0;
@@ -16,7 +18,7 @@
             gap: 10px;
             z-index: 1000;
         }
-        .ar-button {
+        button {
             padding: 10px 20px;
             background: rgba(0, 0, 0, 0.7);
             color: white;
@@ -25,60 +27,101 @@
         }
     </style>
 </head>
-<body style="margin: 0;">
-    <div class="ar-controls">
-        <button class="ar-button" onclick="rotateBox()">Tourner</button>
-        <button class="ar-button" onclick="moveCloser()">Rapprocher</button>
-        <button class="ar-button" onclick="moveFurther()">Éloigner</button>
+<body>
+    <div class="controls">
+        <button onclick="rotateBox()">Tourner</button>
+        <button onclick="moveCloser()">Rapprocher</button>
+        <button onclick="moveFurther()">Éloigner</button>
     </div>
 
-    <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
-        <a-camera gps-camera rotation-reader></a-camera>
-        
-        <a-box id="ar-cube"
-            position="0 2 -5"
-            rotation="0 0 0"
-            scale="1 1 1"
-            material="color: #4CC3D9"
-            animation="property: rotation; to: 0 360 0; dur: 2000; easing: linear; loop: false; enabled: false">
-        </a-box>
-    </a-scene>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        let distance = -5;
-        
+        let camera, scene, renderer, cube;
+        let isRotating = false;
+        let targetZ = -5;
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+
+            // Caméra
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 0;
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            document.body.appendChild(renderer.domElement);
+
+            // Cube
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshPhongMaterial({ color: 0x4CC3D9 });
+            cube = new THREE.Mesh(geometry, material);
+            cube.position.set(0, 0, -5);
+            scene.add(cube);
+
+            // Lumière
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(1, 1, 1);
+            scene.add(light);
+            
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+
+            // Gestion du redimensionnement
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Gestion de l'orientation du mobile
+            window.addEventListener('deviceorientation', handleOrientation, true);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isRotating) {
+                cube.rotation.y += 0.1;
+            }
+
+            // Animation fluide de la position Z
+            cube.position.z += (targetZ - cube.position.z) * 0.1;
+
+            renderer.render(scene, camera);
+        }
+
         function rotateBox() {
-            const cube = document.querySelector('#ar-cube');
-            cube.setAttribute('animation', 'enabled', true);
+            isRotating = true;
             setTimeout(() => {
-                cube.setAttribute('animation', 'enabled', false);
+                isRotating = false;
+                cube.rotation.y = Math.round(cube.rotation.y / (Math.PI * 2)) * Math.PI * 2;
             }, 2000);
         }
 
         function moveCloser() {
-            distance += 1;
-            if (distance > -2) distance = -2;  // Limite minimale
-            updatePosition();
+            targetZ = Math.max(targetZ + 1, -2);
         }
 
         function moveFurther() {
-            distance -= 1;
-            if (distance < -10) distance = -10;  // Limite maximale
-            updatePosition();
+            targetZ = Math.min(targetZ - 1, -10);
         }
 
-        function updatePosition() {
-            const cube = document.querySelector('#ar-cube');
-            cube.setAttribute('position', `0 2 ${distance}`);
+        function handleOrientation(event) {
+            if (!event.alpha) return;
+            
+            const x = event.beta * Math.PI / 180;
+            const y = event.gamma * Math.PI / 180;
+            
+            cube.rotation.x = x * 0.1;
+            cube.rotation.z = y * 0.1;
         }
 
-        // Attendre que la scène soit chargée
-        window.addEventListener('load', () => {
-            const scene = document.querySelector('a-scene');
-            scene.addEventListener('loaded', () => {
-                updatePosition();
-            });
-        });
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
     </script>
 </body>
 </html>
