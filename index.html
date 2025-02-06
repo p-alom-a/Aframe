@@ -34,14 +34,16 @@
     </button>
 
     <script>
-      function enterAR() {
-        const scene = document.querySelector('a-scene');
-        if (scene.hasLoaded) {
-          scene.enterVR();
-        } else {
-          scene.addEventListener('loaded', () => scene.enterVR());
-        }
-      }
+      <script>
+  function enterAR() {
+    const scene = document.querySelector('a-scene');
+    if (scene.hasLoaded) {
+      scene.enterAR();
+    } else {
+      scene.addEventListener('loaded', () => scene.enterAR());
+    }
+  }
+</script
     </script>
   </body>
 </html>
