@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cube AR Gratuit</title>
+    <title>Cube AR Drag and Drop</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
@@ -50,7 +50,7 @@
 </head>
 <body>
     <video id="video" playsinline autoplay></video>
-    <div id="instructions">Touchez l'écran pour placer le cube</div>
+    <div id="instructions">Glissez le cube pour le déplacer</div>
     <div class="controls">
         <button onclick="rotateBox()">Tourner</button>
         <button onclick="moveCloser()">Rapprocher</button>
@@ -60,8 +60,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let camera, scene, renderer, cube;
+        let isDragging = false;
         let isRotating = false;
-        let cubes = [];
+        let previousTouch = { x: 0, y: 0 };
+        let raycaster, plane;
 
         async function init() {
             await startCamera();
@@ -75,6 +77,21 @@
             renderer.setClearColor(0x000000, 0);
             document.body.appendChild(renderer.domElement);
 
+            // Plan invisible pour le drag and drop
+            plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+            raycaster = new THREE.Raycaster();
+
+            // Cube initial
+            const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x4CC3D9,
+                transparent: true,
+                opacity: 0.8
+            });
+            cube = new THREE.Mesh(geometry, material);
+            cube.position.set(0, 0, -5);
+            scene.add(cube);
+
             // Lumières
             const light = new THREE.DirectionalLight(0xffffff, 1);
             light.position.set(1, 1, 1);
@@ -86,7 +103,11 @@
             // Gestionnaires d'événements
             window.addEventListener('resize', onWindowResize, false);
             window.addEventListener('deviceorientation', handleOrientation, true);
-            renderer.domElement.addEventListener('click', createCube);
+            
+            // Événements tactiles
+            renderer.domElement.addEventListener('touchstart', onTouchStart, false);
+            renderer.domElement.addEventListener('touchmove', onTouchMove, false);
+            renderer.domElement.addEventListener('touchend', onTouchEnd, false);
 
             animate();
         }
@@ -113,39 +134,58 @@
             }
         }
 
-        function createCube(event) {
-            // Convertir les coordonnées de la souris en coordonnées 3D
-            const x = (event.clientX / window.innerWidth) * 2 - 1;
-            const y = -(event.clientY / window.innerHeight) * 2 + 1;
+        function onTouchStart(event) {
+            event.preventDefault();
+            const touch = event.touches[0];
+            const rect = renderer.domElement.getBoundingClientRect();
+            const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
 
-            // Créer le cube
-            const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-            const material = new THREE.MeshPhongMaterial({
-                color: 0x4CC3D9,
-                transparent: true,
-                opacity: 0.8
-            });
-            
-            cube = new THREE.Mesh(geometry, material);
-            
-            // Positionner le cube en fonction du clic
-            cube.position.set(x * 3, y * 2, -5);
-            scene.add(cube);
-            cubes.push(cube);
+            raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+            const intersects = raycaster.intersectObject(cube);
 
-            // Mettre à jour les instructions
-            document.getElementById('instructions').textContent = 
-                'Utilisez les boutons pour manipuler le cube';
+            if (intersects.length > 0) {
+                isDragging = true;
+                previousTouch.x = touch.clientX;
+                previousTouch.y = touch.clientY;
+                document.getElementById('instructions').textContent = 'Déplacez le cube...';
+            }
+        }
+
+        function onTouchMove(event) {
+            if (!isDragging) return;
+            event.preventDefault();
+
+            const touch = event.touches[0];
+            const rect = renderer.domElement.getBoundingClientRect();
+            const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+            const intersectPoint = new THREE.Vector3();
+            raycaster.ray.intersectPlane(plane, intersectPoint);
+
+            // Limiter la position du cube dans le champ de vision
+            intersectPoint.x = Math.max(-3, Math.min(3, intersectPoint.x));
+            intersectPoint.y = Math.max(-2, Math.min(2, intersectPoint.y));
+            intersectPoint.z = cube.position.z;
+
+            cube.position.copy(intersectPoint);
+        }
+
+        function onTouchEnd() {
+            if (isDragging) {
+                isDragging = false;
+                document.getElementById('instructions').textContent = 'Glissez le cube pour le déplacer';
+            }
         }
 
         function animate() {
             requestAnimationFrame(animate);
 
-            cubes.forEach(cube => {
-                if (isRotating) {
-                    cube.rotation.y += 0.1;
-                }
-            });
+            if (isRotating) {
+                cube.rotation.y += 0.1;
+            }
 
             renderer.render(scene, camera);
         }
@@ -154,26 +194,20 @@
             isRotating = true;
             setTimeout(() => {
                 isRotating = false;
-                cubes.forEach(cube => {
-                    cube.rotation.y = Math.round(cube.rotation.y / (Math.PI * 2)) * Math.PI * 2;
-                });
+                cube.rotation.y = Math.round(cube.rotation.y / (Math.PI * 2)) * Math.PI * 2;
             }, 2000);
         }
 
         function moveCloser() {
-            cubes.forEach(cube => {
-                if (cube.position.z < -2) {
-                    cube.position.z += 1;
-                }
-            });
+            if (cube.position.z < -2) {
+                cube.position.z += 1;
+            }
         }
 
         function moveFurther() {
-            cubes.forEach(cube => {
-                if (cube.position.z > -10) {
-                    cube.position.z -= 1;
-                }
-            });
+            if (cube.position.z > -10) {
+                cube.position.z -= 1;
+            }
         }
 
         function handleOrientation(event) {
@@ -182,10 +216,10 @@
             const x = event.beta * Math.PI / 180;
             const y = event.gamma * Math.PI / 180;
             
-            cubes.forEach(cube => {
+            if (!isDragging) {
                 cube.rotation.x = x * 0.1;
                 cube.rotation.z = y * 0.1;
-            });
+            }
         }
 
         function onWindowResize() {
