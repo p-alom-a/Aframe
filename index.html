@@ -8,10 +8,28 @@
 </head>
 <body style="margin: 0; overflow: hidden;">
 
-    <a-scene vr-mode-ui='enabled: false' arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: false' renderer='antialias: true; alpha: true'>
+    <a-scene vr-mode-ui='enabled: false' arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: true' renderer='antialias: true; alpha: true'>
         <a-camera gps-new-camera='gpsMinDistance: 5'></a-camera>
         <a-entity material='color: red' geometry='primitive: box' gps-new-entity-place="latitude: 43.6007035742367; longitude: 1.4357006549835205" scale="10 10 10"></a-entity>
     </a-scene>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('AR.js et A-Frame sont chargés.');
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    console.log('Position actuelle:', position.coords.latitude, position.coords.longitude);
+                    const targetLat = 43.6007035742367;
+                    const targetLng = 1.4357006549835205;
+                    console.log('Position cible:', targetLat, targetLng);
+                }, function(error) {
+                    console.error('Erreur de géolocalisation:', error);
+                });
+            } else {
+                console.error('La géolocalisation n\'est pas supportée par ce navigateur.');
+            }
+        });
+    </script>
 
 </body>
 </html>
