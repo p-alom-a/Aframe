@@ -8,12 +8,12 @@
 </head>
 <body style="margin: 0; overflow: hidden;">
     <a-scene vr-mode-ui='enabled: false' arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: true' renderer='antialias: true; alpha: true'>
-        <a-camera gps-new-camera='gpsMinDistance: 5'></a-camera>
+        <a-camera gps-new-camera='gpsMinDistance: 5' rotation-reader gps-camera></a-camera>
         <a-entity id="target-cube"
             material='color: red; opacity: 0.8' 
             geometry='primitive: box' 
             gps-new-entity-place="latitude: 43.60012863364561; longitude: 1.4383077621459963" 
-            scale="20 20 20"
+            scale="50 50 50"
             animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"
         ></a-entity>
     </a-scene>
