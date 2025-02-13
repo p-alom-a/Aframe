@@ -38,6 +38,7 @@
                     const currentLng = position.coords.longitude;
                     const accuracy = position.coords.accuracy;
                     const targetLat = 43.60012863364561;
+                    const currentAltitude = position.coords.altitude;
                     const targetLng = 1.4383077621459963;
                     const distance = calculateDistance(currentLat, currentLng, targetLat, targetLng);
                     
@@ -45,6 +46,7 @@
                           `Votre position :\n` +
                           `Latitude: ${currentLat}\n` +
                           `Longitude: ${currentLng}\n` +
+                          `Altitude: ${currentAltitude !== null ? currentAltitude + " mètres" : "Inconnue"}\n` 
                           `Précision: ${accuracy} mètres\n\n` +
                           `Position cible :\n` +
                           `Latitude: ${targetLat}\n` +
