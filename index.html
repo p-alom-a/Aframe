@@ -19,25 +19,62 @@
     </a-scene>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('AR.js et A-Frame sont chargés.');
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
+            alert('Application AR chargée. Cliquez OK pour commencer la géolocalisation.');
+            
+            if (!navigator.geolocation) {
+                alert('❌ Erreur : Géolocalisation non supportée par ce navigateur');
+                return;
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                function success(position) {
                     const currentLat = position.coords.latitude;
                     const currentLng = position.coords.longitude;
                     const accuracy = position.coords.accuracy;
-                    console.log('Position actuelle:', currentLat, currentLng);
-                    console.log('Précision:', accuracy, 'mètres');
                     const targetLat = 43.60012863364561;
                     const targetLng = 1.4383077621459963;
-                    console.log('Position cible:', targetLat, targetLng);
                     const distance = calculateDistance(currentLat, currentLng, targetLat, targetLng);
-                    console.log('Distance à la cible:', distance, 'mètres');
-                }, function(error) {
-                    console.error('Erreur de géolocalisation:', error);
-                });
-            } else {
-                console.error('La géolocalisation n\'est pas supportée par ce navigateur.');
-            }
+                    
+                    alert(`✅ Position obtenue !\n\n` +
+                          `Votre position :\n` +
+                          `Latitude: ${currentLat}\n` +
+                          `Longitude: ${currentLng}\n` +
+                          `Précision: ${accuracy} mètres\n\n` +
+                          `Position cible :\n` +
+                          `Latitude: ${targetLat}\n` +
+                          `Longitude: ${targetLng}\n\n` +
+                          `Distance jusqu'à la cible : ${distance.toFixed(2)} mètres`);
+                },
+                function error(err) {
+                    let errorMessage = '❌ Erreur de géolocalisation:\n\n';
+                    switch(err.code) {
+                        case err.PERMISSION_DENIED:
+                            errorMessage += "L'accès à la géolocalisation a été refusé.\n" +
+                                         "Veuillez autoriser l'accès dans les paramètres de votre navigateur.";
+                            break;
+                        case err.POSITION_UNAVAILABLE:
+                            errorMessage += "Impossible d'obtenir la position.\n" +
+                                         "Vérifiez que votre GPS est activé et que vous êtes à l'extérieur.";
+                            break;
+                        case err.TIMEOUT:
+                            errorMessage += "La demande de position a expiré.\n" +
+                                         "Vérifiez votre connexion et réessayez.";
+                            break;
+                        default:
+                            errorMessage += "Une erreur inconnue s'est produite.\n" +
+                                         `Code d'erreur: ${err.code}\n` +
+                                         `Message: ${err.message}`;
+                    }
+                    alert(errorMessage);
+                },
+                options
+            );
         });
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
