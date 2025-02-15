@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>AR.js Cube Géolocalisé</title>
@@ -7,95 +7,13 @@
     <script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js'></script>
 </head>
 <body style="margin: 0; overflow: hidden;">
+
     <a-scene vr-mode-ui='enabled: false' arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: true' renderer='antialias: true; alpha: true'>
-        <a-camera gps-new-camera='gpsMinDistance: 5'></a-camera>
-        <a-entity 
-            material='color: red; opacity: 0.8' 
-            geometry='primitive: box' 
-            gps-new-entity-place="latitude: 43.60012863364561; longitude: 1.4383077621459963" 
-            scale="20 20 20"
-            animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"
-        ></a-entity>
+        <a-camera gps-new-camera='gpsMinDistance: 10'></a-camera>
+        <a-entity material='color: red' geometry='primitive: box' gps-new-entity-place="latitude: 43.600696; longitude: 1.435662" scale="10 10 10"></a-entity>
     </a-scene>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            alert('Application AR chargée. Cliquez OK pour commencer la géolocalisation.');
-            
-            if (!navigator.geolocation) {
-                alert('❌ Erreur : Géolocalisation non supportée par ce navigateur');
-                return;
-            }
 
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            };
 
-            navigator.geolocation.getCurrentPosition(
-                function success(position) {
-                    const currentLat = position.coords.latitude;
-                    const currentLng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-                     const currentAltitude = position.coords.altitude;
-                    const targetLat = 43.60012863364561;
-                    const targetLng = 1.4383077621459963;
-                    const distance = calculateDistance(currentLat, currentLng, targetLat, targetLng);
-                    
-                    alert(`✅ Position obtenue !\n\n` +
-                          `Votre position :\n` +
-                          `Latitude: ${currentLat}\n` +
-                          `Longitude: ${currentLng}\n` +
-                           `Altitude: ${currentAltitude !== null ? currentAltitude + " mètres" : "Inconnue"}\n` + 
-                          `Précision: ${accuracy} mètres\n\n` +
-                          `Position cible :\n` +
-                          `Latitude: ${targetLat}\n` +
-                          `Longitude: ${targetLng}\n\n` +
-                          `Distance jusqu'à la cible : ${distance.toFixed(2)} mètres`);
-                },
-                function error(err) {
-                    let errorMessage = '❌ Erreur de géolocalisation:\n\n';
-                    switch(err.code) {
-                        case err.PERMISSION_DENIED:
-                            errorMessage += "L'accès à la géolocalisation a été refusé.\n" +
-                                         "Veuillez autoriser l'accès dans les paramètres de votre navigateur.";
-                            break;
-                        case err.POSITION_UNAVAILABLE:
-                            errorMessage += "Impossible d'obtenir la position.\n" +
-                                         "Vérifiez que votre GPS est activé et que vous êtes à l'extérieur.";
-                            break;
-                        case err.TIMEOUT:
-                            errorMessage += "La demande de position a expiré.\n" +
-                                         "Vérifiez votre connexion et réessayez.";
-                            break;
-                        default:
-                            errorMessage += "Une erreur inconnue s'est produite.\n" +
-                                         `Code d'erreur: ${err.code}\n` +
-                                         `Message: ${err.message}`;
-                    }
-                    alert(errorMessage);
-                },
-                options
-            );
-        });
 
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = deg2rad(lat2 - lat1);
-            const dLon = deg2rad(lon2 - lon1);
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const distance = R * c * 1000;
-            return distance;
-        }
-
-        function deg2rad(deg) {
-            return deg * (Math.PI / 180);
-        }
-    </script>
 </body>
 </html>
-
